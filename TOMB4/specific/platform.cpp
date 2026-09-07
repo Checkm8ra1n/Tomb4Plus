@@ -7,6 +7,8 @@
 #include <windows.h>
 #elif defined(__linux__) || defined(__unix__) || defined(__APPLE__) || defined(_POSIX_VERSION)
 #include <dirent.h>
+#include <sys/stat.h>
+#include <errno.h>
 #else
 #error "Platform not supported"
 #endif
@@ -199,7 +201,7 @@ void platform_message_box(const char* s, ...) {
 }
 
 bool platform_create_directory(const char* path) {
-#ifdef UNICODE
+#if defined(_WIN32) && defined(UNICODE)
 	wchar_t tmp[MAX_PATH];
 	wchar_t* p = NULL;
 	size_t len;

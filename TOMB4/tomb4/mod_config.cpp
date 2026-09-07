@@ -137,7 +137,7 @@ bool SetupUserDirectories() {
 			if (platform_create_directory(game_user_saves_dir_name.c_str())) {
 				savegame_dir_path = game_user_saves_dir_name;
 			} else {
-				platform_fatal_error("Failed to create game user saves directory at path '%s'.", game_user_saves_dir_name);
+				platform_fatal_error("Failed to create game user saves directory at path '%s'.", game_user_saves_dir_name.c_str());
 				return false;
 			}
 
@@ -146,11 +146,11 @@ bool SetupUserDirectories() {
 			if (platform_create_directory(game_user_screenshots_dir_name.c_str())) {
 				screenshots_dir_path = game_user_screenshots_dir_name;
 			} else {
-				platform_fatal_error("Failed to create game user screenshots directory at path '%s'.", game_user_screenshots_dir_name);
+				platform_fatal_error("Failed to create game user screenshots directory at path '%s'.", game_user_screenshots_dir_name.c_str());
 				return false;
 			}
 		} else {
-			platform_fatal_error("Failed to create game user directory at path '%s'.", game_user_dir_path);
+			platform_fatal_error("Failed to create game user directory at path '%s'.", game_user_dir_path.c_str());
 			return false;
 		}
 	} else {

@@ -16,8 +16,13 @@ const char* controller_name = nullptr;
 SDL_GameControllerType controller_type = SDL_CONTROLLER_TYPE_UNKNOWN;
 
 const Uint8 *SDLReadKeyboard(const Uint8* KeyMap) {
-	SDL_PumpEvents();
-
+	// NOTE: do NOT call SDL_PumpEvents() here. This runs on the GameMain
+	// worker thread, not the main thread. On macOS, pumping events (which
+	// internally calls into Cocoa's NSApplication event queue) from a
+	// non-main thread throws an uncaught NSException and aborts the
+	// process. The main thread already pumps events continuously in
+	// SDLProcessEvents(), so reading the keyboard state here is safe
+	// without an extra pump.
 	const Uint8* sdl_keymap = SDL_GetKeyboardState(&keymap_count);
 
 	KeyMap = sdl_keymap;

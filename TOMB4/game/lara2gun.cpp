@@ -17,11 +17,11 @@
 #include "../tomb4/tomb4plus/t4plus_objects.h"
 #include "../tomb4/tomb4plus/t4plus_mirror.h"
 
-static PISTOL_DEF PistolTable[4] = {
-	{ T4PlusGetLaraSlotID, 0, 0, 0, 0 },
-	{ T4PlusGetPistolsAnimSlotID, 4, 5, 13, 24 },
-	{ T4PlusGetRevolverAnimSlotID, 7, 8, 15, 29 },
-	{ T4PlusGetUziAnimSlotID, 4, 5, 13, 24 }
+alignas(8) static PISTOL_DEF PistolTable[4] = {
+    { T4PlusGetLaraSlotID, 0, 0, 0, 0 },
+    { T4PlusGetPistolsAnimSlotID, 4, 5, 13, 24 },
+    { T4PlusGetRevolverAnimSlotID, 7, 8, 15, 29 },
+    { T4PlusGetUziAnimSlotID, 4, 5, 13, 24 }
 };
 
 void undraw_pistol_mesh_left(int32_t weapon_type) {

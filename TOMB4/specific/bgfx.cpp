@@ -13,6 +13,13 @@
 #include "3dmath.h"
 #include "file.h"
 #include "../game/trng/trng_extra_state.h"
+#include <bx/platform.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_syswm.h>
+#include <bgfx/bgfx.h>
+#if defined(__APPLE__)
+#define BX_PLATFORM_OSX 1
+#endif
 
 uint32_t bgfx_clear_col = 0x00000000;
 
@@ -166,49 +173,52 @@ bgfx::ProgramHandle loadProgram(const char* _vsName, const char* _fsName) {
 
 // The thread this gets called from becomes the API thread.
 void InitializeBGFX() {
-	bgfx::renderFrame();
+    bgfx::renderFrame();
 
-	bgfx::Init init;
-	init.type = bgfx::RendererType::OpenGL;
-	init.vendorId = BGFX_PCI_ID_NONE;
-	init.platformData.nwh = SDLGetNativeWindowHandle(sdl_window);
-	init.platformData.ndt = SDLGetNativeDisplayHandle(sdl_window);
-	init.resolution.width = App.dx.dwRenderWidth;
-	init.resolution.height = App.dx.dwRenderHeight;
-	init.resolution.reset = BGFX_RESET_VSYNC | BGFX_RESET_MSAA_X16;
-	if (!bgfx::init(init)) {
-		platform_fatal_error("Could not create BGFX API context!");
-	}
+    bgfx::Init init;
+    init.type = bgfx::RendererType::OpenGL;
+    init.vendorId = BGFX_PCI_ID_NONE;
+    init.swapChain.nwh = SDLGetNativeWindowHandle(sdl_window);
+    init.swapChain.ndt = SDLGetNativeDisplayHandle(sdl_window);
 
-	//bgfx::setDebug(BGFX_DEBUG_TEXT | BGFX_DEBUG_STATS);
-	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, bgfx_clear_col, 1.0f, 0);
-	bgfx::setViewMode(0, bgfx::ViewMode::Sequential);
+    if (!bgfx::init(init)) {
+        platform_fatal_error("Could not create BGFX API context!");
+    }
 
-	SetupOutputBucketVertexLayout();
-	for (int32_t i = 0; i < MAX_BUCKETS; i++) {
-		TEXTUREBUCKET *bucket = &Bucket[i];
-		bucket->handle = bgfx::createDynamicVertexBuffer(BUCKET_VERT_COUNT, ms_outputBucketVertexLayout);
-	}
+    bgfx::reset(BGFX_RESET_VSYNC | BGFX_RESET_MSAA_X16);
 
-	sort_draw_commands = (BGFXSortDrawCommand *)SYSTEM_MALLOC(MAX_SORT_DRAW_COMMANDS * sizeof(BGFXSortDrawCommand));
-	sort_buffer_vertex_buffer = (GFXTLBUMPVERTEX*) SYSTEM_MALLOC(SORT_BUFFER_VERT_COUNT * MAX_SORT_BUFFERS * sizeof(GFXTLBUMPVERTEX));
+    uint16_t width = (uint16_t)(App.dx.dwRenderWidth ? App.dx.dwRenderWidth : 1024);
+    uint16_t height = (uint16_t)(App.dx.dwRenderHeight ? App.dx.dwRenderHeight : 768);
 
-	for (int32_t i = 0; i < MAX_SORT_BUFFERS; i++) {
-		sort_buffer_vertex_handle[i] = bgfx::createDynamicVertexBuffer(SORT_BUFFER_VERT_COUNT, ms_outputBucketVertexLayout);
-	}
+    bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, bgfx_clear_col, 1.0f, 0);
+    bgfx::setViewRect(0, 0, 0, width, height);
+    bgfx::setViewMode(0, bgfx::ViewMode::Sequential);
 
-	u_fogColor = bgfx::createUniform("u_fogColor", bgfx::UniformType::Vec4);
-	u_volumetricFogColor = bgfx::createUniform("u_volumetricFogColor", bgfx::UniformType::Vec4);
-	u_fogParameters = bgfx::createUniform("u_fogParameters", bgfx::UniformType::Vec4);
+    SetupOutputBucketVertexLayout();
+    for (int32_t i = 0; i < MAX_BUCKETS; i++) {
+        TEXTUREBUCKET *bucket = &Bucket[i];
+        bucket->handle = bgfx::createDynamicVertexBuffer(BUCKET_VERT_COUNT, ms_outputBucketVertexLayout);
+    }
 
-	m_outputVTLTexProgram = loadProgram("vs_vtl_tex", "fs_vtl_tex");
-	if (App.Filtering) {
-		m_outputVTLTexAlphaClippedProgram = loadProgram("vs_vtl_tex_alpha_clipped_filter", "fs_vtl_tex_alpha_clipped_filter");
-	} else {
-		m_outputVTLTexAlphaClippedProgram = loadProgram("vs_vtl_tex_alpha_clipped_point", "fs_vtl_tex_alpha_clipped_point");
-	}
-	m_outputVTLTexAlphaBlendedProgram = loadProgram("vs_vtl_tex_alpha_blended", "fs_vtl_tex_alpha_blended");
-	m_outputVTLAlphaProgram = loadProgram("vs_vtl_alpha", "fs_vtl_alpha");
+    sort_draw_commands = (BGFXSortDrawCommand *)SYSTEM_MALLOC(MAX_SORT_DRAW_COMMANDS * sizeof(BGFXSortDrawCommand));
+    sort_buffer_vertex_buffer = (GFXTLBUMPVERTEX*) SYSTEM_MALLOC(SORT_BUFFER_VERT_COUNT * MAX_SORT_BUFFERS * sizeof(GFXTLBUMPVERTEX));
+
+    for (int32_t i = 0; i < MAX_SORT_BUFFERS; i++) {
+        sort_buffer_vertex_handle[i] = bgfx::createDynamicVertexBuffer(SORT_BUFFER_VERT_COUNT, ms_outputBucketVertexLayout);
+    }
+
+    u_fogColor = bgfx::createUniform("u_fogColor", bgfx::UniformType::Vec4);
+    u_volumetricFogColor = bgfx::createUniform("u_volumetricFogColor", bgfx::UniformType::Vec4);
+    u_fogParameters = bgfx::createUniform("u_fogParameters", bgfx::UniformType::Vec4);
+
+    m_outputVTLTexProgram = loadProgram("vs_vtl_tex", "fs_vtl_tex");
+    if (App.Filtering) {
+        m_outputVTLTexAlphaClippedProgram = loadProgram("vs_vtl_tex_alpha_clipped_filter", "fs_vtl_tex_alpha_clipped_filter");
+    } else {
+        m_outputVTLTexAlphaClippedProgram = loadProgram("vs_vtl_tex_alpha_clipped_point", "fs_vtl_tex_alpha_clipped_point");
+    }
+    m_outputVTLTexAlphaBlendedProgram = loadProgram("vs_vtl_tex_alpha_blended", "fs_vtl_tex_alpha_blended");
+    m_outputVTLAlphaProgram = loadProgram("vs_vtl_alpha", "fs_vtl_alpha");
 }
 
 void ShutdownBGFX() {

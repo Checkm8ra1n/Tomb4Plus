@@ -166,7 +166,7 @@ INVOBJ inventry_objects_list[NUM_INVOBJ] = {
 };
 #pragma warning(pop)
 
-COMBINELIST dels_handy_combine_table[23] = {
+alignas(8) COMBINELIST dels_handy_combine_table[23] = {
 	{combine_revolver_lasersight, INV_REVOLVER_ITEM, INV_LASERSIGHT_ITEM, INV_REVOLVER_LASER_ITEM},
 	{combine_crossbow_lasersight, INV_CROSSBOW_ITEM, INV_LASERSIGHT_ITEM, INV_CROSSBOW_LASER_ITEM},
 	{combine_PuzzleItem1, INV_PUZZLE1_COMBO1_ITEM, INV_PUZZLE1_COMBO2_ITEM, INV_PUZZLE1_ITEM},

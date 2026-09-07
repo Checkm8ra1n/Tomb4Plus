@@ -38,7 +38,6 @@
 #endif
 
 #include <bgfx/bgfx.h>
-#include <bgfx/platform.h>
 #include <bx/bx.h>
 #include <bx/allocator.h>
 #include <bx/math.h>

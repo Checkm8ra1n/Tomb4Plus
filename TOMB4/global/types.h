@@ -1708,11 +1708,12 @@ struct RINGME {
 	int32_t numobjectsinlist;
 };
 
-struct COMBINELIST {
-	void(*combine_routine)(int32_t flag);
-	int16_t item1;
-	int16_t item2;
-	int16_t combined_item;
+struct alignas(8) COMBINELIST {
+    void(*combine_routine)(int32_t flag);
+    int16_t item1;
+    int16_t item2;
+    int16_t combined_item;
+    int16_t padding; // Garantisce che la dimensione sia 16 byte (multiplo di 8)
 };
 
 struct CUTSEQ_ROUTINES {
@@ -2063,12 +2064,12 @@ struct JEEPINFO {
 	int16_t gear;
 };
 
-struct PISTOL_DEF {
-	int16_t (*ObjectFunc)();
-	int8_t Draw1Anim2;
-	int8_t Draw1Anim;
-	int8_t Draw2Anim;
-	int8_t RecoilAnim;
+struct alignas(8) PISTOL_DEF {
+    int16_t (*ObjectFunc)();
+    int8_t Draw1Anim2;
+    int8_t Draw1Anim;
+    int8_t Draw2Anim;
+    int8_t RecoilAnim;
 };
 
 struct BINK_STRUCT {
@@ -2088,11 +2089,11 @@ struct LEGACY_SAVEFILE_INFO {
 	int32_t num;
 };
 
-struct COMMANDLINES {
-	char command[20];
-	bool needs_parameter;
-	void (*code)(char*);
-	char parameter[PARAMETER_MAX_LENGTH];
+struct alignas(8) COMMANDLINES {
+    void (*code)(char*);                 // Puntatore a 64-bit posizionato all'inizio (8 byte)
+    char command[20];                    // 20 byte
+    bool needs_parameter;                // 1 byte
+    char parameter[PARAMETER_MAX_LENGTH];// Dimensione variabile
 };
 
 struct CHANGE_STRUCT {

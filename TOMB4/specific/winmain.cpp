@@ -21,10 +21,11 @@
 
 #include "../tomb4/mod_config.h"
 #include "../tomb4/tomb4.h"
+#include <SDL2/SDL_syswm.h>
 
-static COMMANDLINES commandlines[] = {
-	{ "NOFMV", 0, &CLNoFMV },
-	{ "PATH", 1, &CLPath }
+alignas(8) static COMMANDLINES commandlines[] = {
+    { &CLNoFMV, "NOFMV", false },
+    { &CLPath, "PATH", true }
 };
 
 WINAPP App;
@@ -474,6 +475,23 @@ int32_t main(int32_t argc, char* argv[]) {
 	}
 
 	SDL_SetWindowFullscreen(sdl_window, window_flags);
+
+#ifndef _WIN32
+	// On HiDPI/Retina displays the window's logical size (points) differs
+	// from the actual backing framebuffer size (pixels). bgfx renders into
+	// the real pixel-sized backbuffer, so we must query the drawable size
+	// in pixels, otherwise the render only fills a fraction (e.g. a
+	// top-left quarter on a 2x Retina display) of the window.
+	{
+		int32_t drawableWidth = rendererWidth;
+		int32_t drawableHeight = rendererHeight;
+		SDL_GL_GetDrawableSize(sdl_window, &drawableWidth, &drawableHeight);
+		if (drawableWidth > 0 && drawableHeight > 0) {
+			rendererWidth = drawableWidth;
+			rendererHeight = drawableHeight;
+		}
+	}
+#endif
 
 #ifdef _WIN32
 	if (!DXCreate(rendererWidth, rendererHeight, window_bpp, App.StartFlags, &App.dx, App.hWnd, WS_OVERLAPPEDWINDOW)) {

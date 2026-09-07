@@ -116,19 +116,40 @@ if(TARGET compile_shaders)
     add_dependencies(tomb4plus compile_shaders)
 endif()
 
+if(APPLE)
+    set_target_properties(tomb4plus PROPERTIES
+        BUILD_RPATH "/Library/Frameworks"
+        INSTALL_RPATH "/Library/Frameworks"
+    )
+endif()
+
 # Link with aliased targets
+target_include_directories(tomb4plus PRIVATE
+    ${SDL2_INCLUDE_DIRS}
+    ${simpleini_SOURCE_DIR}
+    ${miniaudio_SOURCE_DIR}
+    ${tinyjson_SOURCE_DIR}
+    ${FETCHCONTENT_BASE_DIR}/bgfx-src/include
+    ${FETCHCONTENT_BASE_DIR}/bx-src/include
+    ${FETCHCONTENT_BASE_DIR}/bimg-src/include
+    ${FETCHCONTENT_BASE_DIR}/bgfx-src/bgfx/include
+    ${FETCHCONTENT_BASE_DIR}/bgfx-src/bx/include
+    ${FETCHCONTENT_BASE_DIR}/bgfx-src/bimg/include
+    ${FETCHCONTENT_BASE_DIR}/bgfx-src/3rdparty
+)
 target_link_libraries(tomb4plus PRIVATE
     bgfx
     bx
     bimg
-    SDL2::SDL2main
-    SDL2::SDL2
-    OpenGL::GL
-    ZLIB::ZLIB
     miniaudio
     tinyjson
+    ZLIB::ZLIB
+    ${SDL2_LIBRARIES}
+    "-framework Cocoa"
+    "-framework IOKit"
+    "-framework CoreVideo"
+    "-framework QuartzCore"
 )
-
 # Include directories
 target_include_directories(tomb4plus PRIVATE
     ${SDL2_INCLUDE_DIRS}
@@ -136,6 +157,9 @@ target_include_directories(tomb4plus PRIVATE
     ${simpleini_SOURCE_DIR}
     ${miniaudio_SOURCE_DIR}
     ${tinyjson_SOURCE_DIR}
+    ${bgfx_SOURCE_DIR}/include
+    ${bx_SOURCE_DIR}/include
+    ${bimg_SOURCE_DIR}/include
 )
 
  if (MSVC)
