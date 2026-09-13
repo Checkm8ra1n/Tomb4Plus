@@ -1325,6 +1325,9 @@ FLOOR_INFO* GetFloor(int32_t x, int32_t y, int32_t z, int16_t* room_number) {
 		int32_t floor_index = x_floor + (y_floor * r->x_size);
 		if (floor_index < 0 || floor_index >= (r->x_size * r->y_size)) {
 			// Out of range.
+			printf("DEBUG GetFloor OOB: query x=%d y=%d z=%d room=%d | room.x=%d room.z=%d room.x_size=%d room.y_size=%d | x_floor=%d y_floor=%d floor_index=%d\n",
+			       x, y, z, *room_number, r->x, r->z, r->x_size, r->y_size, x_floor, y_floor, floor_index);
+			fflush(stdout);
 			return nullptr;
 		}
 
@@ -1473,8 +1476,9 @@ int32_t GetHeight(FLOOR_INFO* floor, int32_t x, int32_t y, int32_t z) {
 	height_type = WALL;
 
 	if (!floor) {
-		platform_fatal_error("NULL floordata passed into GetHeight function.");
-		return 0;
+		printf("DEBUG GetHeight: floor is NULL, degrading gracefully instead of fatal-erroring (temporary diagnostic build)\n");
+		fflush(stdout);
+		return NO_HEIGHT;
 	}
 
 	while (floor->pit_room != 0xff) {

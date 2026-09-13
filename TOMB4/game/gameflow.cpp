@@ -695,38 +695,48 @@ int32_t TitleOptions() {
 	}
 
 	switch (menu) {
-		case 1:
+		case 1: {
+			// Small safe-area margin so the bottom row of the level list never
+			// touches the physical edge of the window (originally relied on
+			// CRT overscan to hide this, which is not present on a modern
+			// windowed display). Shifts the whole visible block up uniformly.
+			int32_t bottom_margin = font_height;
+
 			PrintString(phd_centerx, font_height + phd_winymin, 6, GetFixedStringForTextID(TXT_Select_Level), FF_CENTER);
 
-			if (Gameflow->nLevels < 10) {
-				nFirst = 1;
-				nLevels = Gameflow->nLevels - 1;
-			} else {
-				sel = selection;
-				n = 0;
-				nLevels = 10;
+			// T4Plus fix: the original code only scrolled/capped the list when the
+			// TOTAL level count was >= 10, and otherwise drew every single entry
+			// with no limit and no scrolling - if a build has many entries under
+			// one category (e.g. all of Angkor Wat's sub-levels) this overflowed
+			// past the bottom of the screen. Always cap to the same scrollable
+			// window, sized to whichever is smaller: 10 rows, or the actual level
+			// count (so small games still show everything, just without a
+			// pointless scrollbar).
+			nLevels = (Gameflow->nLevels - 1 < 10) ? (Gameflow->nLevels - 1) : 10;
 
-				while (sel) {
-					sel >>= 1;
-					n++;
-				}
+			sel = selection;
+			n = 0;
 
-				nFirst = n - 9;
-
-				if (nFirst < 1)
-					nFirst = 1;
-				else if (nFirst > 1) {
-					PrintString(32, 3 * font_height + phd_winymin, 6, "\x18", 0);
-					PrintString(phd_winxmax - 48, 3 * font_height + phd_winymin, 6, "\x18", 0);
-				}
-
-				if (n != Gameflow->nLevels - 1) {
-					PrintString(32, 12 * font_height + phd_winymin, 6, "\x1a", 0);
-					PrintString(phd_winxmax - 48, 12 * font_height + phd_winymin, 6, "\x1a", 0);
-				}
+			while (sel) {
+				sel >>= 1;
+				n++;
 			}
 
-			y = 2 * font_height;
+			nFirst = n - (nLevels - 1);
+
+			if (nFirst < 1)
+				nFirst = 1;
+			else if (nFirst > 1) {
+				PrintString(32, 3 * font_height + phd_winymin - bottom_margin, 6, "\x18", 0);
+				PrintString(phd_winxmax - 48, 3 * font_height + phd_winymin - bottom_margin, 6, "\x18", 0);
+			}
+
+			if (n != Gameflow->nLevels - 1) {
+				PrintString(32, 12 * font_height + phd_winymin - bottom_margin, 6, "\x1a", 0);
+				PrintString(phd_winxmax - 48, 12 * font_height + phd_winymin - bottom_margin, 6, "\x1a", 0);
+			}
+
+			y = 2 * font_height - bottom_margin;
 
 			for (lp = nFirst; lp < nLevels + nFirst; lp++) {
 				y += font_height;
@@ -735,6 +745,7 @@ int32_t TitleOptions() {
 
 			flag = (int64_t)1 << (Gameflow->nLevels - 2);
 			break;
+		}
 		case 2:
 			if (Gameflow->LoadSaveEnabled) {
 				load = DoLoadSave(IN_LOAD);
@@ -750,15 +761,20 @@ int32_t TitleOptions() {
 			SoundEffect(SFX_LARA_NO, 0, SFX_ALWAYS);
 			menu = 0;
 			break;
-		case 0:
+		case 0: {
 			ShowTitle();
 			Chris_Menu = 0;
-			PrintString(phd_centerx, phd_winymax - 4 * font_height, (selection & 1) ? 1 : 2, GetFixedStringForTextID(TXT_New_Game), FF_CENTER);
-			PrintString(phd_centerx, phd_winymax - 3 * font_height, (selection & 2) ? 1 : 2, GetFixedStringForTextID(TXT_Load_Game), FF_CENTER);
-			PrintString(phd_centerx, phd_winymax - 2 * font_height, (selection & 4) ? 1 : 2, GetFixedStringForTextID(TXT_Options), FF_CENTER);
-			PrintString(phd_centerx, phd_winymax - 1 * font_height, (selection & 8) ? 1 : 2, GetFixedStringForTextID(TXT_Exit), FF_CENTER);
+			// Small safe-area margin so the bottom menu item never touches the
+			// physical edge of the window (originally relied on CRT overscan
+			// to hide this, which is not present on a modern windowed display).
+			int32_t bottom_margin = font_height / 2;
+			PrintString(phd_centerx, phd_winymax - bottom_margin - 4 * font_height, (selection & 1) ? 1 : 2, GetFixedStringForTextID(TXT_New_Game), FF_CENTER);
+			PrintString(phd_centerx, phd_winymax - bottom_margin - 3 * font_height, (selection & 2) ? 1 : 2, GetFixedStringForTextID(TXT_Load_Game), FF_CENTER);
+			PrintString(phd_centerx, phd_winymax - bottom_margin - 2 * font_height, (selection & 4) ? 1 : 2, GetFixedStringForTextID(TXT_Options), FF_CENTER);
+			PrintString(phd_centerx, phd_winymax - bottom_margin - 1 * font_height, (selection & 8) ? 1 : 2, GetFixedStringForTextID(TXT_Exit), FF_CENTER);
 			flag = 8;
 			break;
+		}
 		case 3:
 			DoOptions();
 			break;

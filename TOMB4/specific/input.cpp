@@ -826,7 +826,17 @@ bool IsActionPressed(InputAction current_action) {
 	if (conflict[current_action])
 		return false;
 
-	key = keyboard_layout[0][current_action];
+	// BUG FIX: keyboard_layout[0] stores T4P_KEY_* (DirectInput-style) codes,
+	// not SDL_Scancode values - it must go through the same conversion used
+	// for keyboard_layout[1] above before indexing into keymap[], which is
+	// indexed by SDL_Scancode. Without this, T4P_KEY_NUMPAD0 (0x52 = 82)
+	// numerically collides with SDL_SCANCODE_UP (also 82), so pressing the
+	// Up arrow could falsely satisfy any action whose default key is Numpad0
+	// (e.g. Look) whenever conflict[] hadn't been computed for that action.
+	key = convert_tomb_keycode_to_sdl_scancode(keyboard_layout[0][current_action]);
+
+	if (key >= keymap_count)
+		return false;
 
 	if (keymap[key])
 		return true;
